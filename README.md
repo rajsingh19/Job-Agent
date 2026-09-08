@@ -7,7 +7,7 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
 
 ---
 
-## Current Status: Phase 4 Complete
+## Current Status: Phase 5 Complete
 
 ### Phase 1 Deliverables:
 - Repository structure, configuration engine, async SQLAlchemy ORM models, state machine, Alembic migrations, and testing suite.
@@ -31,6 +31,13 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
 - **Role & Experience Matchers**: Multi-cluster role similarity and experience level hierarchy comparison.
 - **Explainability & Confidence Indicators**: Deterministic match reasoning generation with bounded quality indicator.
 - **REST Matching API**: `POST /api/v1/jobs/{job_id}/match`, `POST /api/v1/jobs/match`, and `GET /api/v1/jobs/ranked`.
+
+### Phase 5 Deliverables:
+- **ATS Detection Engine (`ATSDetector`)**: Deterministic pattern matching and signal evaluation across Greenhouse, Lever, Ashby, LinkedIn, Internshala, Naukri, Shine, Wellfound, and generic enterprise ATSs with conflict resolution.
+- **Connector Registry & Capabilities**: Centralized `ConnectorRegistry` with honest capability reporting (`can_submit_application=False` strictly enforced).
+- **Platform Connectors**: Native implementations for `GreenhouseConnector`, `LeverConnector`, `AshbyConnector`, and `GenericBrowserConnector`.
+- **Connector Routing (`ConnectorRouter`)**: Full route resolution mapping job metadata to execution parameters (`requires_browser`, `requires_login`, `requires_user_action`).
+- **REST Connector API**: `POST /api/v1/jobs/{job_id}/detect-platform`, `GET /api/v1/jobs/{job_id}/application-route`, and `GET /api/v1/connectors`.
 
 ---
 
@@ -68,7 +75,7 @@ Visit http://localhost:8000/docs for Swagger documentation.
 - [x] **Phase 2: Resume / Candidate Profile System**
 - [x] **Phase 3: Job Discovery (Greenhouse, Lever, Ashby, Generic Browser)**
 - [x] **Phase 4: Matching Engine (Hard filters + Hybrid Semantic Ranking)**
-- [ ] **Phase 5: ATS Detection + Connector Architecture**
+- [x] **Phase 5: ATS Detection + Connector Architecture**
 - [ ] **Phase 6: Application Drafting & Grounded Answer Generation**
 - [ ] **Phase 7: Browser Agent (Playwright)**
 - [ ] **Phase 8: Authentication & Persistent Session Manager**

@@ -53,6 +53,16 @@ from app.schemas.application import (
     ApplicationResponse,
 )
 
+from app.schemas.connector import (
+    PlatformType,
+    ApplicationMethod,
+    ConnectorCapabilities,
+    ATSDetectionResult,
+    ApplicationRoute,
+    PlatformDetectResponse,
+    ConnectorInfo,
+)
+
 __all__ = [
     "UserBase",
     "UserCreate",
@@ -96,4 +106,11 @@ __all__ = [
     "ApplicationUpdate",
     "ApplicationTransitionRequest",
     "ApplicationResponse",
+    "PlatformType",
+    "ApplicationMethod",
+    "ConnectorCapabilities",
+    "ATSDetectionResult",
+    "ApplicationRoute",
+    "PlatformDetectResponse",
+    "ConnectorInfo",
 ]

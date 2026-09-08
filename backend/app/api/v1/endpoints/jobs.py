@@ -18,6 +18,12 @@ from app.schemas.matching import (
     RankedJobsQuery,
     RankedJobsResponse,
 )
+from app.schemas.connector import (
+    ApplicationRoute,
+    PlatformDetectResponse,
+)
+from app.services.connectors.detector import ATSDetector
+from app.services.connectors.router import ConnectorRouter, get_connector_router
 from app.services.discovery.repository import JobRepository
 from app.services.discovery.service import JobDiscoveryService
 from app.services.matching.service import JobMatchingService
@@ -28,6 +34,8 @@ discovery_service = JobDiscoveryService()
 job_repo = JobRepository()
 matching_service = JobMatchingService()
 profile_service = CandidateProfileService()
+ats_detector = ATSDetector()
+connector_router = get_connector_router()
 
 
 @router.post(
@@ -188,6 +196,60 @@ async def match_single_job(
         candidate_profile=candidate_profile,
         job=job,
     )
+
+
+@router.post(
+    "/{job_id}/detect-platform",
+    response_model=PlatformDetectResponse,
+    summary="Detect ATS provider or application platform for a job posting",
+)
+async def detect_platform_endpoint(
+    job_id: str,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Inspects job apply URL, source metadata, and domains to determine the ATS platform."""
+    job = await job_repo.get_job_by_id(db=db, job_id=job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": "JOB_NOT_FOUND", "message": f"Job with ID '{job_id}' was not found."},
+        )
+
+    detection_result = ats_detector.detect_platform(job)
+    route = await connector_router.route_job(job)
+
+    return PlatformDetectResponse(
+        job_id=str(job.id),
+        platform=detection_result.platform,
+        confidence=detection_result.confidence,
+        application_method=route.application_method,
+        requires_browser=route.requires_browser,
+        requires_user_action=route.requires_user_action,
+        signals=detection_result.signals,
+        warnings=detection_result.warnings,
+    )
+
+
+@router.get(
+    "/{job_id}/application-route",
+    response_model=ApplicationRoute,
+    summary="Determine application routing parameters and connector capabilities for a job",
+)
+async def get_application_route_endpoint(
+    job_id: str,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Returns the resolved PlatformConnector route, capabilities, and execution requirements."""
+    job = await job_repo.get_job_by_id(db=db, job_id=job_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": "JOB_NOT_FOUND", "message": f"Job with ID '{job_id}' was not found."},
+        )
+
+    return await connector_router.route_job(job)
 
 
 @router.get(

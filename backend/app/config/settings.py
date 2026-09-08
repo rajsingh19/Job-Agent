@@ -73,6 +73,10 @@ class Settings(BaseSettings):
     lever_company_slugs: list[str] = ["palantir", "netflix", "affirm"]
     ashby_company_slugs: list[str] = ["ramp", "openai", "cursor"]
 
+    # ATS Detection & Connector Routing
+    ats_detection_enabled: bool = True
+    connector_routing_enabled: bool = True
+
     # Human-In-The-Loop Enforcement
     require_explicit_approval: bool = True
 
