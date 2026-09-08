@@ -52,6 +52,8 @@ storage/resumes/*
 !storage/resumes/.gitkeep
 storage/sessions/*
 !storage/sessions/.gitkeep
+storage/browser_sessions/*
+!storage/browser_sessions/.gitkeep
 storage/screenshots/*
 !storage/screenshots/.gitkeep
 

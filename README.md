@@ -53,6 +53,25 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
   - `POST /api/v1/applications/{application_id}/validate`
   - `GET /api/v1/applications/{application_id}/review`
 
+### Phase 7 Deliverables:
+- **Playwright Browser & Session Managers (`BrowserManager`, `SessionManager`)**: Headless/headed Chromium lifecycle management, dynamic asyncio event loop rebinding, and multi-tenant session isolation (`0o600` permissions, zero cookie leakage).
+- **Security & Challenge Detection (`AuthDetector`, `ChallengeDetector`)**: Scans for login redirects, CAPTCHA (Turnstile/reCAPTCHA), Cloudflare bot checks, OTP, and 2FA. Strictly pauses execution with `USER_ACTION_REQUIRED` and zero bypass attempts.
+- **Form Inspection & Parsing (`PageInspector`, `FormParser`)**: Safe DOM inspection extracting normalized inputs, textareas, selects, and distinguishing step navigation buttons from submit controls.
+- **Phase 6 Draft Integration & Sensitive Guard (`FieldDetector`)**: Maps verified draft fields to DOM inputs. Sensitive questions (sponsorship, legal authorization, disabilities, unconfigured salary) strictly default to `REQUIRES_USER_INPUT`.
+- **Safe Execution & Resume Upload (`FieldExecutor`, `ResumeUploader`)**: Executes verified inputs and uploads candidate resumes with path containment checks.
+- **CRITICAL Hard Submission Guard (`SubmissionBlockedError`)**: Hard-coded service level barrier that strictly blocks clicking any final "Submit", "Apply Now", or "Finish Application" button.
+- **Visual Checkpoint Capture (`ScreenshotManager`)**: Captures full-page screenshots at key milestones and embeds them into Phase 6 review packages.
+- **REST Browser Automation API**:
+  - `POST /api/v1/browser/sessions`
+  - `GET /api/v1/browser/sessions/{session_id}`
+  - `POST /api/v1/browser/applications/{application_id}/start`
+  - `GET /api/v1/browser/sessions/{session_id}/form`
+  - `POST /api/v1/browser/sessions/{session_id}/resume`
+  - `POST /api/v1/browser/sessions/{session_id}/pause`
+  - `GET /api/v1/browser/applications/{application_id}/execution`
+  - `GET /api/v1/browser/applications/{application_id}/screenshots`
+- **Frontend Browser Console**: Next.js App Router dashboard (`/applications/[id]/execution`) displaying real-time execution progress, detected form fields, user action prompts, and visual checkpoints.
+
 ---
 
 ## Quickstart
@@ -62,6 +81,7 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
 python3 -m venv backend/.venv
 source backend/.venv/bin/activate
 pip install -r backend/requirements.txt
+playwright install chromium
 ```
 
 ### 2. Configure Environment
@@ -81,6 +101,13 @@ PYTHONPATH=backend backend/.venv/bin/uvicorn app.main:app --reload --port 8000
 ```
 Visit http://localhost:8000/docs for Swagger documentation.
 
+### 5. Run Frontend Development Server
+```bash
+cd frontend
+npm run dev
+```
+Visit http://localhost:3000/applications/app_demo_001/execution for the browser automation console.
+
 ---
 
 ## Roadmap
@@ -91,7 +118,7 @@ Visit http://localhost:8000/docs for Swagger documentation.
 - [x] **Phase 4: Matching Engine (Hard filters + Hybrid Semantic Ranking)**
 - [x] **Phase 5: ATS Detection + Connector Architecture**
 - [x] **Phase 6: Application Drafting & Grounded Answer Generation**
-- [ ] **Phase 7: Browser Agent (Playwright)**
+- [x] **Phase 7: Browser Agent (Playwright)**
 - [ ] **Phase 8: Authentication & Persistent Session Manager**
 - [ ] **Phase 9: Application Approval Queue**
 - [ ] **Phase 10: Tracking & Metrics**

@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     storage_dir: Path = Field(default=BASE_DIR / "storage")
     resumes_dir: Path = Field(default=BASE_DIR / "storage" / "resumes")
     sessions_dir: Path = Field(default=BASE_DIR / "storage" / "sessions")
+    browser_sessions_dir: Path = Field(default=BASE_DIR / "storage" / "browser_sessions")
     screenshots_dir: Path = Field(default=BASE_DIR / "storage" / "screenshots")
     max_resume_file_size_bytes: int = 10 * 1024 * 1024  # 10 MB limit
 
@@ -58,6 +59,10 @@ class Settings(BaseSettings):
     browser_headless: bool = True
     browser_slow_mo_ms: int = 50
     browser_timeout_ms: int = 30000
+    browser_navigation_timeout_ms: int = 30000
+    browser_session_timeout_minutes: int = 30
+    browser_screenshot_enabled: bool = True
+    browser_max_concurrent_sessions: int = 5
 
     # Rate Limiting & Automation Safety
     max_applications_per_day: int = 20
@@ -82,7 +87,7 @@ class Settings(BaseSettings):
 
     def ensure_directories_exist(self) -> None:
         """Ensures all configured storage directories exist."""
-        for path in [self.storage_dir, self.resumes_dir, self.sessions_dir, self.screenshots_dir]:
+        for path in [self.storage_dir, self.resumes_dir, self.sessions_dir, self.browser_sessions_dir, self.screenshots_dir]:
             path.mkdir(parents=True, exist_ok=True)
 
 
