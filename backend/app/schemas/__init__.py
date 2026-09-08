@@ -62,6 +62,18 @@ from app.schemas.connector import (
     PlatformDetectResponse,
     ConnectorInfo,
 )
+from app.schemas.application_draft import (
+    FieldType,
+    FieldSource,
+    QuestionCategory,
+    ApplicationField,
+    DraftCustomQuestion,
+    CandidateApplicationContext,
+    ApplicationDraft,
+    ApplicationDraftCreateRequest,
+    ApplicationDraftValidationResponse,
+    ApplicationReviewPackageResponse,
+)
 
 __all__ = [
     "UserBase",
@@ -113,4 +125,14 @@ __all__ = [
     "ApplicationRoute",
     "PlatformDetectResponse",
     "ConnectorInfo",
+    "FieldType",
+    "FieldSource",
+    "QuestionCategory",
+    "ApplicationField",
+    "DraftCustomQuestion",
+    "CandidateApplicationContext",
+    "ApplicationDraft",
+    "ApplicationDraftCreateRequest",
+    "ApplicationDraftValidationResponse",
+    "ApplicationReviewPackageResponse",
 ]

@@ -7,7 +7,7 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
 
 ---
 
-## Current Status: Phase 5 Complete
+## Current Status: Phase 6 Complete
 
 ### Phase 1 Deliverables:
 - Repository structure, configuration engine, async SQLAlchemy ORM models, state machine, Alembic migrations, and testing suite.
@@ -38,6 +38,20 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
 - **Platform Connectors**: Native implementations for `GreenhouseConnector`, `LeverConnector`, `AshbyConnector`, and `GenericBrowserConnector`.
 - **Connector Routing (`ConnectorRouter`)**: Full route resolution mapping job metadata to execution parameters (`requires_browser`, `requires_login`, `requires_user_action`).
 - **REST Connector API**: `POST /api/v1/jobs/{job_id}/detect-platform`, `GET /api/v1/jobs/{job_id}/application-route`, and `GET /api/v1/connectors`.
+
+### Phase 6 Deliverables:
+- **Multi-Resume Scoring & Selection (`ResumeSelector`)**: Candidate resume selection evaluated against job requirements, semantic skills, and domain keywords with score delta thresholding (`delta < 0.15` triggers user review flag).
+- **Deterministic Field Mapping (`ApplicationFieldMapper`)**: Regex-driven form label mapping with strict source precedence hierarchy (`USER_INPUT` > `USER_PREFERENCE` > `CANDIDATE_PROFILE` > `RESUME` > `DERIVED` > `UNKNOWN`).
+- **Rule-Based Question Classifier (`QuestionClassifier`)**: Multi-category regex classification for 12 question types (authorization, sponsorship, salary, start date, relocation, years of experience, technical skills, background check, custom subjective, etc.).
+- **Grounded Answer Generator (`QuestionAnswerer`)**: Strict zero-hallucination factual answer generation. Legal, authorization, disability, and unconfigured compensation questions strictly flag `requires_user_input = True`.
+- **Truthful Cover Letter Generator (`CoverLetterGenerator`)**: Grounded cover letters citing only verified candidate achievements and job requirements, with resilient fallback to `None` + review warning.
+- **Pre-Flight Application Validator (`ApplicationDraftValidator`)**: Email, phone, URL format validation, missing required field detection, and anti-fabrication truthfulness verification.
+- **Review Package Builder (`ReviewPackageGenerator`)**: Aggregates structured fields, answers, warnings, validation status, and empty screenshot placeholders ready for Phase 7 browser automation.
+- **REST Application Draft API**:
+  - `POST /api/v1/jobs/{job_id}/application-draft`
+  - `GET /api/v1/applications/{application_id}/draft`
+  - `POST /api/v1/applications/{application_id}/validate`
+  - `GET /api/v1/applications/{application_id}/review`
 
 ---
 
@@ -76,7 +90,7 @@ Visit http://localhost:8000/docs for Swagger documentation.
 - [x] **Phase 3: Job Discovery (Greenhouse, Lever, Ashby, Generic Browser)**
 - [x] **Phase 4: Matching Engine (Hard filters + Hybrid Semantic Ranking)**
 - [x] **Phase 5: ATS Detection + Connector Architecture**
-- [ ] **Phase 6: Application Drafting & Grounded Answer Generation**
+- [x] **Phase 6: Application Drafting & Grounded Answer Generation**
 - [ ] **Phase 7: Browser Agent (Playwright)**
 - [ ] **Phase 8: Authentication & Persistent Session Manager**
 - [ ] **Phase 9: Application Approval Queue**

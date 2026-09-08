@@ -17,9 +17,14 @@ class LLMProvider(ABC):
         """Generate structured JSON response from the LLM."""
         pass
 
+    @abstractmethod
+    async def generate_text(self, prompt: str, system_prompt: str) -> str:
+        """Generate free-form text response from the LLM."""
+        pass
+
 
 class OpenAILLMProvider(LLMProvider):
-    """OpenAI API provider for structured JSON generation."""
+    """OpenAI API provider for structured JSON and text generation."""
 
     def __init__(self, api_key: str, model: str = "gpt-4o-mini", temperature: float = 0.2):
         self.api_key = api_key
@@ -70,6 +75,44 @@ class OpenAILLMProvider(LLMProvider):
                 raise
             raise LLMUnavailableError(f"OpenAI client error: {str(e)}")
 
+    async def generate_text(self, prompt: str, system_prompt: str) -> str:
+        if not self.api_key or self.api_key == "mock-key":
+            raise LLMUnavailableError("OpenAI API key is missing or not configured.")
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": self.temperature,
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=45.0) as client:
+                response = await client.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                )
+                if response.status_code != 200:
+                    logger.error(f"OpenAI API error {response.status_code}: {response.text}")
+                    raise LLMUnavailableError(f"OpenAI service returned error status {response.status_code}")
+
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+        except (httpx.TimeoutException, httpx.NetworkError) as e:
+            logger.error(f"OpenAI network/timeout error: {e}")
+            raise LLMUnavailableError(f"OpenAI request timed out or network error: {str(e)}")
+        except Exception as e:
+            if isinstance(e, LLMUnavailableError):
+                raise
+            raise LLMUnavailableError(f"OpenAI client error: {str(e)}")
+
 
 class GroqLLMProvider(LLMProvider):
     """Groq API provider for fast open-weight model JSON inference."""
@@ -116,6 +159,40 @@ class GroqLLMProvider(LLMProvider):
                 raise
             raise LLMUnavailableError(f"Groq request failed: {str(e)}")
 
+    async def generate_text(self, prompt: str, system_prompt: str) -> str:
+        if not self.api_key or self.api_key == "mock-key":
+            raise LLMUnavailableError("Groq API key is missing or not configured.")
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": self.temperature,
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                )
+                if response.status_code != 200:
+                    raise LLMUnavailableError(f"Groq returned error status {response.status_code}")
+
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+        except Exception as e:
+            if isinstance(e, LLMUnavailableError):
+                raise
+            raise LLMUnavailableError(f"Groq request failed: {str(e)}")
+
 
 class OllamaLLMProvider(LLMProvider):
     """Ollama local self-hosted LLM provider."""
@@ -145,6 +222,25 @@ class OllamaLLMProvider(LLMProvider):
         except Exception as e:
             raise LLMUnavailableError(f"Ollama request failed: {str(e)}")
 
+    async def generate_text(self, prompt: str, system_prompt: str) -> str:
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            "stream": False,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.post(f"{self.base_url}/api/chat", json=payload)
+                if response.status_code != 200:
+                    raise LLMUnavailableError(f"Ollama returned status {response.status_code}")
+                data = response.json()
+                return data["message"]["content"]
+        except Exception as e:
+            raise LLMUnavailableError(f"Ollama request failed: {str(e)}")
+
 
 class MockLLMProvider(LLMProvider):
     """
@@ -155,6 +251,26 @@ class MockLLMProvider(LLMProvider):
     def __init__(self, should_fail: bool = False, malformed_json: bool = False):
         self.should_fail = should_fail
         self.malformed_json = malformed_json
+
+    async def generate_text(self, prompt: str, system_prompt: str) -> str:
+        if self.should_fail:
+            raise LLMUnavailableError("Mock LLM simulated provider failure.")
+
+        prompt_lower = prompt.lower()
+        if "cover letter" in prompt_lower or "cover letter" in system_prompt.lower():
+            return (
+                "Dear Hiring Team,\n\n"
+                "I am writing to express my strong enthusiasm for this engineering opportunity. "
+                "With hands-on experience building backend systems using Python, FastAPI, and PostgreSQL, "
+                "I have developed high-performance services and automated complex workflows. "
+                "I would love to bring these technical capabilities and dedication to your team.\n\n"
+                "Sincerely,\nCandidate"
+            )
+        elif "why are you interested" in prompt_lower or "motivation" in prompt_lower:
+            return "I am excited by the company's mission and the opportunity to apply my Python and backend expertise to high-impact challenges."
+        elif "project" in prompt_lower:
+            return "I architected an autonomous job application agent with Python and FastAPI, improving workflow efficiency."
+        return "I bring extensive experience in software development, collaborative problem solving, and building resilient systems."
 
     async def generate_json(self, prompt: str, system_prompt: str) -> Dict[str, Any]:
         if self.should_fail:

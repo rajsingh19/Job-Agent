@@ -18,10 +18,15 @@ from app.schemas.matching import (
     RankedJobsQuery,
     RankedJobsResponse,
 )
+from app.schemas.application_draft import (
+    ApplicationDraft,
+    ApplicationDraftCreateRequest,
+)
 from app.schemas.connector import (
     ApplicationRoute,
     PlatformDetectResponse,
 )
+from app.services.applications.draft_service import ApplicationDraftService
 from app.services.connectors.detector import ATSDetector
 from app.services.connectors.router import ConnectorRouter, get_connector_router
 from app.services.discovery.repository import JobRepository
@@ -36,6 +41,7 @@ matching_service = JobMatchingService()
 profile_service = CandidateProfileService()
 ats_detector = ATSDetector()
 connector_router = get_connector_router()
+draft_service = ApplicationDraftService()
 
 
 @router.post(
@@ -250,6 +256,46 @@ async def get_application_route_endpoint(
         )
 
     return await connector_router.route_job(job)
+
+
+@router.post(
+    "/{job_id}/application-draft",
+    response_model=ApplicationDraft,
+    summary="Create a reviewable application draft for a job posting",
+)
+async def create_application_draft_endpoint(
+    job_id: str,
+    draft_request: Optional[ApplicationDraftCreateRequest] = None,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Creates an application draft combining candidate profile, selected resume,
+    standard field mappings, custom Q&A, and tailored cover letter.
+    NEVER submits applications automatically.
+    """
+    req = draft_request or ApplicationDraftCreateRequest()
+    try:
+        draft = await draft_service.create_draft(
+            db=db,
+            user_id=user_id,
+            job_id=job_id,
+            resume_id=req.resume_id,
+            custom_questions=req.custom_questions,
+            include_cover_letter=req.include_cover_letter,
+        )
+        return draft
+    except ValueError as e:
+        err_msg = str(e)
+        if "not found" in err_msg.lower():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"error": "RESOURCE_NOT_FOUND", "message": err_msg},
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "DRAFT_CREATION_FAILED", "message": err_msg},
+        )
 
 
 @router.get(
