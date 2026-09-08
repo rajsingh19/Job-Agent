@@ -46,6 +46,13 @@ class Settings(BaseSettings):
     embedding_provider: str = "mock"
     embedding_api_key: str = "mock-key"
     embedding_model: str = "text-embedding-3-small"
+    embedding_timeout_seconds: float = 30.0
+
+    # Job Matching & Scoring Weights (Must sum to 1.0)
+    matching_keyword_weight: float = 0.30
+    matching_semantic_weight: float = 0.35
+    matching_role_weight: float = 0.20
+    matching_experience_weight: float = 0.15
 
     # Browser Automation Configuration
     browser_headless: bool = True

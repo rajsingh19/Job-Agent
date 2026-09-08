@@ -25,6 +25,13 @@ from app.schemas.job import (
     SourceError,
     DiscoveryResult,
 )
+from app.schemas.matching import (
+    HardFilterResult,
+    JobMatchResult,
+    MatchQuery,
+    RankedJobsQuery,
+    RankedJobsResponse,
+)
 from app.schemas.status_history import (
     StatusHistoryBase,
     StatusHistoryCreate,
@@ -70,6 +77,11 @@ __all__ = [
     "JobSearchQuery",
     "SourceError",
     "DiscoveryResult",
+    "HardFilterResult",
+    "JobMatchResult",
+    "MatchQuery",
+    "RankedJobsQuery",
+    "RankedJobsResponse",
     "StatusHistoryBase",
     "StatusHistoryCreate",
     "StatusHistoryResponse",

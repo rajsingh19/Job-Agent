@@ -7,7 +7,7 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
 
 ---
 
-## Current Status: Phase 3 Complete
+## Current Status: Phase 4 Complete
 
 ### Phase 1 Deliverables:
 - Repository structure, configuration engine, async SQLAlchemy ORM models, state machine, Alembic migrations, and testing suite.
@@ -22,6 +22,15 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
 - **Deduplication Engine**: Deterministic `source_hash` generation and fuzzy cross-source deduplication.
 - **Idempotent Persistence**: `JobRepository` ensuring repeated discovery runs update existing postings without duplicate database records.
 - **REST Discovery API**: `POST /api/v1/jobs/discover`, `GET /api/v1/jobs`, and `GET /api/v1/jobs/{job_id}`.
+
+### Phase 4 Deliverables:
+- **Hard Constraint Engine**: Structured evaluation of candidate constraints (excluded companies, work mode, location, minimum compensation) with `UNKNOWN` constraint handling.
+- **Keyword & Skill Matcher**: Canonical skill overlap detection with synonym expansion and false-positive word boundary prevention.
+- **Semantic Vector Matcher**: Deterministic candidate & job representation embeddings with cosine similarity calculations.
+- **Resilient Fallback Engine**: Seamless dynamic weight redistribution across keyword, role, and experience factors during external provider downtime.
+- **Role & Experience Matchers**: Multi-cluster role similarity and experience level hierarchy comparison.
+- **Explainability & Confidence Indicators**: Deterministic match reasoning generation with bounded quality indicator.
+- **REST Matching API**: `POST /api/v1/jobs/{job_id}/match`, `POST /api/v1/jobs/match`, and `GET /api/v1/jobs/ranked`.
 
 ---
 
@@ -58,7 +67,7 @@ Visit http://localhost:8000/docs for Swagger documentation.
 - [x] **Phase 1: Repository + Database + Models + Configuration**
 - [x] **Phase 2: Resume / Candidate Profile System**
 - [x] **Phase 3: Job Discovery (Greenhouse, Lever, Ashby, Generic Browser)**
-- [ ] **Phase 4: Matching Engine (Hard filters + Hybrid Semantic Ranking)**
+- [x] **Phase 4: Matching Engine (Hard filters + Hybrid Semantic Ranking)**
 - [ ] **Phase 5: ATS Detection + Connector Architecture**
 - [ ] **Phase 6: Application Drafting & Grounded Answer Generation**
 - [ ] **Phase 7: Browser Agent (Playwright)**
