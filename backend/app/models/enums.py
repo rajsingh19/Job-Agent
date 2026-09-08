@@ -1,0 +1,73 @@
+from enum import Enum
+
+
+class ApplicationStatus(str, Enum):
+    """
+    Standardized Application Lifecycle States.
+    Enforces strict Human-in-the-Loop workflow.
+    """
+    # Progressive states
+    DISCOVERED = "DISCOVERED"
+    MATCHED = "MATCHED"
+    DRAFTING = "DRAFTING"
+    PENDING_REVIEW = "PENDING_REVIEW"
+    APPROVED = "APPROVED"
+    SUBMITTING = "SUBMITTING"
+    SUBMITTED = "SUBMITTED"
+    VIEWED = "VIEWED"
+    INTERVIEW = "INTERVIEW"
+    OFFER = "OFFER"
+
+    # Alternative / Terminal states
+    REJECTED = "REJECTED"
+    WITHDRAWN = "WITHDRAWN"
+    FAILED = "FAILED"
+    REQUIRES_USER_ACTION = "REQUIRES_USER_ACTION"
+
+
+class RemoteType(str, Enum):
+    ON_SITE = "ON_SITE"
+    HYBRID = "HYBRID"
+    REMOTE = "REMOTE"
+    ANY = "ANY"
+
+
+class ATSProvider(str, Enum):
+    GREENHOUSE = "GREENHOUSE"
+    LEVER = "LEVER"
+    ASHBY = "ASHBY"
+    WORKDAY = "WORKDAY"
+    WORKABLE = "WORKABLE"
+    SMARTRECRUITERS = "SMARTRECRUITERS"
+    CUSTOM = "CUSTOM"
+    UNKNOWN = "UNKNOWN"
+
+
+class JobSourceType(str, Enum):
+    API = "API"
+    ATS = "ATS"
+    BROWSER = "BROWSER"
+
+
+class ConnectorType(str, Enum):
+    GREENHOUSE_API = "GREENHOUSE_API"
+    LEVER_API = "LEVER_API"
+    ASHBY_API = "ASHBY_API"
+    LINKEDIN_BROWSER = "LINKEDIN_BROWSER"
+    INTERNSHALA_BROWSER = "INTERNSHALA_BROWSER"
+    WELLFOUND_BROWSER = "WELLFOUND_BROWSER"
+    NAUKRI_BROWSER = "NAUKRI_BROWSER"
+    INDEED_BROWSER = "INDEED_BROWSER"
+    GLASSDOOR_BROWSER = "GLASSDOOR_BROWSER"
+    SHINE_BROWSER = "SHINE_BROWSER"
+    GENERIC_BROWSER = "GENERIC_BROWSER"
+    CUSTOM_CONNECTOR = "CUSTOM_CONNECTOR"
+
+
+class ExperienceLevel(str, Enum):
+    INTERNSHIP = "INTERNSHIP"
+    ENTRY_LEVEL = "ENTRY_LEVEL"
+    MID_LEVEL = "MID_LEVEL"
+    SENIOR_LEVEL = "SENIOR_LEVEL"
+    LEAD = "LEAD"
+    EXECUTIVE = "EXECUTIVE"
