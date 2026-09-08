@@ -89,6 +89,22 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
   - `GET /api/v1/applications/{application_id}/audit`
 - **Frontend Review & Approval Dashboard**: Next.js App Router review cockpit (`/applications/[id]/review`) displaying complete application package, field review, Q&A confidence, cover letter, checkpoint screenshots, approval checkbox, auto-pilot submission trigger, and audit trail drawer.
 
+### Phase 9 Deliverables:
+- **Portal Compatibility Architecture (`backend/app/services/portal/`)**: Modular capability model, declarative configurations, registry, and compatibility checking for Greenhouse, Lever, Ashby, and Generic ATS.
+- **Multi-Step Application Progression**: Dynamic step progression with DOM stabilization (`networkidle` / `domcontentloaded`), checkpoint capture, and re-discovery without stale references.
+- **Authentication & Challenge Detection Hardening**: Proactive pausing on login redirects, password fields, SSO, CAPTCHAs (Turnstile, Cloudflare, reCAPTCHA), and OTP/2FA without bypassing security challenges.
+- **Resume Upload Hardening**: Multi-tenant isolation, 10MB size enforcement, allowed extension validation (`.pdf`, `.docx`), path traversal defense, and zero raw path leakage.
+- **Submission Confirmation Hardening**: Multi-source confirmation detection across URLs, DOM success banners, and reference code extraction (`GH-`, `LEV-`, `ASH-`), strictly blocking automatic retries on ambiguous submissions.
+- **Safe Diagnostics & Logging**: Zero credential/cookie/secret leakage, sanitized navigation history, and structured telemetry.
+- **Manual Real-Portal Validation Tool (`scripts/validate_portal.py`)**: Headed/headless developer inspection tool operating strictly within the Phase 8 approval boundary.
+- **REST Portal API**:
+  - `GET /api/v1/portals`
+  - `GET /api/v1/portals/{portal_id}`
+  - `GET /api/v1/applications/{application_id}/portal-diagnostics`
+  - `POST /api/v1/applications/{application_id}/execution/resume`
+  - `POST /api/v1/applications/{application_id}/execution/pause`
+- **Updated Execution Cockpit**: Extended `/applications/[id]/execution` dashboard with real portal badges, multi-step progression indicators, authentication alerts, and diagnostic drawers.
+
 ---
 
 ## Quickstart
@@ -138,7 +154,7 @@ npm run dev
 - [x] **Phase 6: Application Drafting & Grounded Answer Generation**
 - [x] **Phase 7: Browser Agent (Playwright)**
 - [x] **Phase 8: Human Approval & Final Application Submission**
-- [ ] **Phase 9: Application Approval Queue**
+- [x] **Phase 9: Real-Portal Integration & Compatibility Hardening**
 - [ ] **Phase 10: Tracking & Metrics**
 - [ ] **Phase 11: Next.js Frontend Dashboard**
 - [ ] **Phase 12: Email Monitoring**

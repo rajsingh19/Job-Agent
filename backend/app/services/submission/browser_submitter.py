@@ -98,6 +98,16 @@ class BrowserSubmitter:
                 continue
 
         if not submit_button:
+            try:
+                from app.services.portal.registry import PortalRegistry
+                adapter = PortalRegistry.get_instance().get_adapter_for_url(page.url if hasattr(page, "url") else "")
+                submit_button = await adapter.find_submit_control(page)
+                if submit_button:
+                    logger.info(f"Identified submission control via adapter '{adapter.portal_id}'")
+            except Exception as e:
+                logger.debug(f"Portal adapter lookup for submit control failed: {e}")
+
+        if not submit_button:
             logger.error(f"No submission control found on page for application '{application_id}'.")
             raise SubmissionControlNotFoundError(
                 f"Final submission control was not found on the page for application '{application_id}'."

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Acme Corp - Multi Step Application</title>
+</head>
+<body>
+    <div id="main">
+        <div class="progress-bar">
+            <span>Step 1 of 3</span>
+        </div>
+        <h2>Personal Information</h2>
+        <form id="application_form" action="/jobs/123/step2">
+            <div class="field">
+                <label for="first_name">First Name</label>
+                <input type="text" id="first_name" name="first_name" required="required" />
+            </div>
+            <div class="field">
+                <label for="last_name">Last Name</label>
+                <input type="text" id="last_name" name="last_name" required="required" />
+            </div>
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required="required" />
+            </div>
+            <div class="field">
+                <label for="resume">Resume</label>
+                <input type="file" id="resume" name="resume" required="required" />
+            </div>
+            <div class="nav-buttons">
+                <button type="button" id="next_step" class="btn-next">Next</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

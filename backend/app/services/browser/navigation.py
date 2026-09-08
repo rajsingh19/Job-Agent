@@ -65,3 +65,19 @@ class NavigationHelper:
         except Exception as e:
             logger.error("Failed to click step progression button: %s", e)
             raise BrowserExecutionError(f"Failed to advance form step: {e}") from e
+
+    @classmethod
+    async def wait_for_page_stability(cls, page, timeout_ms: int = 5000) -> None:
+        """
+        Waits for DOM and network to stabilize after a step progression action.
+        """
+        try:
+            if hasattr(page, "wait_for_load_state"):
+                await page.wait_for_load_state("domcontentloaded", timeout=timeout_ms)
+        except Exception:
+            pass
+        try:
+            if hasattr(page, "wait_for_load_state"):
+                await page.wait_for_load_state("networkidle", timeout=min(timeout_ms, 3000))
+        except Exception:
+            pass

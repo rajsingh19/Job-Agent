@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from app.services.browser.enums import AuthStatus, ChallengeType, ExecutionStepState
 from app.services.browser.models import (
     BrowserExecutionPlan,
@@ -56,6 +56,8 @@ class ApplicationExecutionStore:
         execution_plan: Optional[BrowserExecutionPlan] = None,
         warning: Optional[str] = None,
         screenshot: Optional[ScreenshotMetadata] = None,
+        portal_diagnostics: Optional[Dict[str, Any]] = None,
+        step_info: Optional[Dict[str, Any]] = None,
     ) -> ExecutionStateSnapshot:
         snapshot = self._states.get(application_id)
         if not snapshot:
@@ -88,6 +90,10 @@ class ApplicationExecutionStore:
             snapshot.warnings.append(warning)
         if screenshot:
             snapshot.screenshots.append(screenshot)
+        if portal_diagnostics is not None:
+            snapshot.portal_diagnostics = portal_diagnostics
+        if step_info is not None:
+            snapshot.step_info = step_info
 
         snapshot.updated_at = datetime.now(timezone.utc)
         return snapshot

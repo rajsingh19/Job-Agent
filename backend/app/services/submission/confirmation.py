@@ -1,6 +1,9 @@
+import logging
 import re
 from typing import List, Optional, Tuple
 from app.services.submission.models import ConfirmationStatus
+
+logger = logging.getLogger(__name__)
 
 
 class SubmissionConfirmationDetector:
@@ -8,6 +11,7 @@ class SubmissionConfirmationDetector:
     Detects portal-level confirmation of job application submission.
     Scans URL patterns, DOM success banners, confirmation reference codes,
     and flags ambiguities or residual form errors.
+    Integrates with PortalRegistry to leverage portal-specific adapters.
     """
 
     SUCCESS_URL_PATTERNS = [
@@ -139,11 +143,24 @@ class SubmissionConfirmationDetector:
         page: any,
     ) -> Tuple[ConfirmationStatus, Optional[str], Optional[str], List[str]]:
         """
-        Extracts URL and visible text from Playwright Page and detects confirmation.
+        Extracts URL and visible text from Playwright Page and detects confirmation,
+        consulting portal-specific adapters when available.
         """
         url = page.url or ""
+        
+        # 1. Consult PortalAdapter if available
         try:
-            # Extract visible body text
+            from app.services.portal.registry import PortalRegistry
+            adapter = PortalRegistry.get_instance().get_adapter_for_url(url)
+            if adapter and adapter.portal_id != "generic_ats":
+                status, conf_type, conf_ref, warnings = await adapter.detect_confirmation(page)
+                if status in (ConfirmationStatus.CONFIRMED, ConfirmationStatus.NOT_CONFIRMED):
+                    return status, conf_type, conf_ref, warnings
+        except Exception as e:
+            logger.warning("Portal adapter confirmation detection had error: %s", e)
+
+        # 2. General heuristics
+        try:
             body_text = await page.inner_text("body", timeout=5000)
         except Exception:
             try:

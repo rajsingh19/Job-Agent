@@ -133,3 +133,4 @@ Mounted under `/api/v1/browser`:
 3. **No Credential Storage**: Passwords, OTPs, and authorization tokens are never prompted for, intercepted, or persisted by the backend.
 4. **No Anti-Bot Bypass**: No stealth evasion tooling or automated CAPTCHA solvers are implemented.
 5. **No Final Submission in Phase 7**: The backend guarantees that Phase 7 transitions applications to `READY_FOR_REVIEW` (or `REQUIRES_USER_ACTION`), never to `SUBMITTING` or `SUBMITTED`.
+6. **Phase 9 Portal Compatibility**: Extended with dedicated portal adapters (`Greenhouse`, `Lever`, `Ashby`, `Generic ATS`), multi-step DOM stabilization, dynamic re-discovery, and sanitized diagnostics. See [`docs/portal-compatibility.md`](portal-compatibility.md).

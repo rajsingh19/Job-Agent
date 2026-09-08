@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Two-Step Verification</title>
+</head>
+<body>
+    <div class="otp-verification-box">
+        <h2>Enter Verification Code</h2>
+        <p>We've sent a code to your registered mobile device. Enter the 6-digit code below.</p>
+        <form action="/auth/verify-otp" method="POST">
+            <input type="text" name="otp_code" maxlength="6" placeholder="123456" />
+            <button type="submit">Verify & Continue</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -33,6 +33,9 @@ from app.services.browser.resume_uploader import ResumeUploader
 from app.services.browser.screenshot_manager import ScreenshotManager
 from app.services.browser.session_manager import SessionManager
 from app.services.connectors.router import get_connector_router
+from app.services.portal.diagnostics import PortalDiagnosticsCollector
+from app.services.portal.models import FormStepInfo
+from app.services.portal.registry import PortalRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -222,14 +225,136 @@ class BrowserExecutionService:
             except Exception as e:
                 logger.warning("Field action failed for %s: %s", action.field_id, e)
 
+        # Multi-Step Navigation Progression (if intermediate next button exists and no blocking user actions)
+        max_steps = 5
+        current_step_num = 1
+        timeline_events: List[Dict[str, Any]] = [
+            {"step": "initial_inspection", "status": "completed", "message": f"Discovered {len(discovered_form.fields)} fields."}
+        ]
+
+        registry = PortalRegistry.get_instance()
+        portal_adapter = registry.get_adapter_for_url(target_url)
+
+        while (
+            discovered_form.has_next_button
+            and not any(a.requires_user_input for a in plan.actions)
+            and current_step_num < max_steps
+        ):
+            next_ctrl = await portal_adapter.find_next_control(page)
+            if not next_ctrl:
+                break
+
+            logger.info("Advancing form from step %d to next step for application '%s'", current_step_num, application_id)
+            timeline_events.append({
+                "step": f"step_{current_step_num}_progression",
+                "status": "advancing",
+                "message": f"Clicking next control from step {current_step_num}."
+            })
+
+            try:
+                await next_ctrl.click()
+                await NavigationHelper.wait_for_page_stability(page)
+                current_step_num += 1
+            except Exception as e:
+                logger.warning("Failed to advance step: %s", e)
+                break
+
+            # Checkpoint: After step advancement
+            scr_step = await ScreenshotManager.capture_checkpoint(
+                page=page, step=f"after_step_{current_step_num}_navigation", application_id=application_id
+            )
+            if scr_step:
+                self.execution_store.update_state(application_id=application_id, screenshot=scr_step)
+
+            # Re-check for authentication and challenges on new step
+            auth_status = await AuthDetector.detect_auth_status(page)
+            if auth_status == AuthStatus.LOGIN_REQUIRED:
+                snapshot = self.execution_store.update_state(
+                    application_id=application_id,
+                    state=ExecutionStepState.AUTHENTICATION_REQUIRED,
+                    auth_status=AuthStatus.LOGIN_REQUIRED,
+                    user_action_required=True,
+                    user_action_reason="AUTHENTICATION_REQUIRED",
+                    user_instructions="Authentication required during form step. Please log in manually.",
+                )
+                application.status = ApplicationStatus.REQUIRES_USER_ACTION.value
+                await db.commit()
+                return snapshot
+
+            chal_type, chal_msg = await ChallengeDetector.detect_challenge(page)
+            if chal_type != ChallengeType.NONE:
+                snapshot = self.execution_store.update_state(
+                    application_id=application_id,
+                    state=ExecutionStepState.USER_ACTION_REQUIRED,
+                    challenge_type=chal_type,
+                    user_action_required=True,
+                    user_action_reason=chal_type.value,
+                    user_instructions=chal_msg or "Please complete the security challenge manually.",
+                )
+                application.status = ApplicationStatus.REQUIRES_USER_ACTION.value
+                await db.commit()
+                return snapshot
+
+            # Re-discover fields dynamically on new step
+            discovered_form = await FormParser.parse_form(
+                page=page, form_id=f"form_{application_id}_step_{current_step_num}"
+            )
+            step_plan = FieldDetector.map_fields_to_plan(
+                form=discovered_form,
+                draft=draft,
+                application_id=application_id,
+            )
+
+            # Execute safe fields for new step
+            for action in step_plan.actions:
+                if action.requires_user_input:
+                    continue
+                try:
+                    if action.action_type == FieldActionType.UPLOAD_RESUME:
+                        await ResumeUploader.upload_resume(
+                            page=page,
+                            db=db,
+                            user_id=user_id,
+                            resume_id=action.value,
+                            selector=action.selector,
+                            portal_id=portal_adapter.portal_id,
+                        )
+                        action.executed = True
+                    else:
+                        await FieldExecutor.execute_action(page=page, action=action)
+                except SubmissionBlockedError:
+                    raise
+                except Exception as e:
+                    logger.warning("Field action failed on step %d for %s: %s", current_step_num, action.field_id, e)
+
+            plan = step_plan
+
         # Checkpoint: After Safe Filling
         scr_filled = await ScreenshotManager.capture_checkpoint(
             page=page, step="after_safe_fill", application_id=application_id
         )
 
-        # 11. Finalize Execution State
+        # 11. Finalize Execution State & Diagnostics
         has_pending_user_input = any(a.requires_user_input for a in plan.actions)
         final_state = ExecutionStepState.READY_FOR_REVIEW if not has_pending_user_input else ExecutionStepState.USER_ACTION_REQUIRED
+
+        # Collect sanitized portal diagnostics
+        diagnostics = PortalDiagnosticsCollector.collect_diagnostics(
+            portal_id=portal_adapter.portal_id,
+            portal_name=portal_adapter.name,
+            current_url=page.url if hasattr(page, "url") else target_url,
+            step_info=FormStepInfo(
+                step_index=current_step_num,
+                total_steps=discovered_form.total_steps or current_step_num,
+                has_next=discovered_form.has_next_button,
+                has_submit=discovered_form.has_submit_button,
+                is_final_step=discovered_form.has_submit_button and not discovered_form.has_next_button,
+            ),
+            form=discovered_form,
+            auth_state="AUTHENTICATED",
+            challenge_state="NONE",
+            timeline_events=timeline_events,
+        )
 
         snapshot = self.execution_store.update_state(
             application_id=application_id,
@@ -239,17 +364,20 @@ class BrowserExecutionService:
             user_instructions="Please complete unanswered or sensitive fields manually." if has_pending_user_input else None,
             execution_plan=plan,
             screenshot=scr_filled,
+            portal_diagnostics=diagnostics.model_dump(mode="json"),
+            step_info=diagnostics.current_step.model_dump(mode="json"),
         )
 
-        # 12. Update Database Application Status and Embed Screenshots
+        # 12. Update Database Application Status and Embed Screenshots + Diagnostics
         if has_pending_user_input:
             application.status = ApplicationStatus.REQUIRES_USER_ACTION.value
         else:
             application.status = ApplicationStatus.PENDING_REVIEW.value
 
-        # Append screenshots to review package
+        # Append screenshots and diagnostics to review package
         review_pkg = dict(application.review_package or {})
         review_pkg["screenshots"] = [s.model_dump(mode="json") for s in snapshot.screenshots]
+        review_pkg["portal_diagnostics"] = diagnostics.model_dump(mode="json")
         application.review_package = review_pkg
 
         await db.commit()

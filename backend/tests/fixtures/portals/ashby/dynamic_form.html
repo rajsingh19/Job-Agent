@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notion - Platform Engineer - Ashby</title>
+</head>
+<body>
+    <div id="ashby-app" data-testid="application-form">
+        <header>
+            <h1>Application for Platform Engineer</h1>
+        </header>
+        <div class="application-form-container">
+            <div class="form-row">
+                <label>First Name</label>
+                <input type="text" name="firstName" placeholder="First Name" required />
+            </div>
+            <div class="form-row">
+                <label>Last Name</label>
+                <input type="text" name="lastName" placeholder="Last Name" required />
+            </div>
+            <div class="form-row">
+                <label>Email Address</label>
+                <input type="email" name="email" placeholder="you@example.com" required />
+            </div>
+            <div class="form-row">
+                <label>Phone Number</label>
+                <input type="tel" name="phoneNumber" placeholder="+1 (555) 000-0000" />
+            </div>
+            <div class="form-row">
+                <label>Resume (PDF, DOCX)</label>
+                <input type="file" name="resumeFile" data-testid="file-upload-input" required />
+            </div>
+            <div class="form-row">
+                <label>LinkedIn Profile</label>
+                <input type="url" name="linkedInUrl" placeholder="https://linkedin.com/in/..." />
+            </div>
+            <div class="form-row">
+                <label>GitHub Profile</label>
+                <input type="url" name="githubUrl" placeholder="https://github.com/..." />
+            </div>
+            <div class="footer-actions">
+                <button type="submit" data-testid="submit-application" class="ashby-submit-btn">Submit Application</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

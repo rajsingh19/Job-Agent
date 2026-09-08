@@ -102,5 +102,7 @@ class ExecutionStateSnapshot(BaseModel):
     total_actions_count: int = 0
     warnings: List[str] = Field(default_factory=list)
     screenshots: List[ScreenshotMetadata] = Field(default_factory=list)
+    portal_diagnostics: Optional[Dict[str, Any]] = None
+    step_info: Optional[Dict[str, Any]] = None
     started_at: Optional[datetime] = None
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

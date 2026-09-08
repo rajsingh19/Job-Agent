@@ -26,6 +26,36 @@ interface ScreenshotMetadata {
   relative_path: string;
 }
 
+interface FormStepInfo {
+  step_index: number;
+  total_steps?: number;
+  step_label?: string;
+  has_next: boolean;
+  has_previous: boolean;
+  has_submit: boolean;
+  is_final_step: boolean;
+}
+
+interface PortalDiagnostics {
+  portal_id: string;
+  portal_name: string;
+  url_domain: string;
+  current_step: FormStepInfo;
+  total_fields_discovered: number;
+  missing_required_fields: string[];
+  auth_state: string;
+  challenge_state: string;
+  selector_failures: string[];
+  navigation_history: string[];
+  timeline: Array<{
+    step: string;
+    status: string;
+    timestamp: string;
+    message?: string;
+  }>;
+  warnings: string[];
+}
+
 interface ExecutionStateSnapshot {
   application_id: string;
   session_id?: string;
@@ -42,6 +72,8 @@ interface ExecutionStateSnapshot {
   total_actions_count: number;
   warnings: string[];
   screenshots: ScreenshotMetadata[];
+  portal_diagnostics?: PortalDiagnostics;
+  step_info?: FormStepInfo;
   started_at?: string;
   updated_at: string;
 }
@@ -153,6 +185,37 @@ export default function BrowserExecutionDashboard() {
         relative_path: `storage/screenshots/${applicationId}_after_safe_fill.png`,
       },
     ],
+    step_info: {
+      step_index: 1,
+      total_steps: 2,
+      has_next: true,
+      has_previous: false,
+      has_submit: false,
+      is_final_step: false,
+    },
+    portal_diagnostics: {
+      portal_id: "greenhouse",
+      portal_name: "Greenhouse",
+      url_domain: "boards.greenhouse.io",
+      current_step: {
+        step_index: 1,
+        total_steps: 2,
+        has_next: true,
+        has_previous: false,
+        has_submit: false,
+        is_final_step: false,
+      },
+      total_fields_discovered: 5,
+      missing_required_fields: ["work_auth"],
+      auth_state: "AUTHENTICATED",
+      challenge_state: "NONE",
+      selector_failures: [],
+      navigation_history: ["https://boards.greenhouse.io/company/jobs/4019283"],
+      timeline: [
+        { step: "initial_inspection", status: "completed", timestamp: new Date().toISOString(), message: "Discovered 5 fields on Greenhouse portal." },
+      ],
+      warnings: [],
+    },
     updated_at: new Date().toISOString(),
   });
 
@@ -201,17 +264,15 @@ export default function BrowserExecutionDashboard() {
   };
 
   const resumeExecution = async () => {
-    if (!execution.session_id) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/browser/sessions/${execution.session_id}/resume`, {
+      const res = await fetch(`http://localhost:8000/api/v1/applications/${applicationId}/execution/resume`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-User-ID": "current_user",
         },
-        body: JSON.stringify({ application_id: applicationId }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -225,16 +286,14 @@ export default function BrowserExecutionDashboard() {
   };
 
   const pauseExecution = async () => {
-    if (!execution.session_id) return;
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/browser/sessions/${execution.session_id}/pause`, {
+      const res = await fetch(`http://localhost:8000/api/v1/applications/${applicationId}/execution/pause`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-User-ID": "current_user",
         },
-        body: JSON.stringify({ application_id: applicationId }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -265,6 +324,11 @@ export default function BrowserExecutionDashboard() {
     }
   };
 
+  const portalName = execution.portal_diagnostics?.portal_name || "ATS Portal";
+  const stepText = execution.step_info?.total_steps
+    ? `Step ${execution.step_info.step_index} of ${execution.step_info.total_steps}`
+    : `Step ${execution.step_info?.step_index || 1}`;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-10 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -276,6 +340,12 @@ export default function BrowserExecutionDashboard() {
                 Browser Execution Console
               </h1>
               {getStatusBadge(execution.state)}
+              <span className="px-2.5 py-1 rounded text-xs font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800">
+                {portalName}
+              </span>
+              <span className="px-2.5 py-1 rounded text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-700">
+                {stepText}
+              </span>
             </div>
             <p className="text-slate-400 text-sm mt-1">
               Application ID: <span className="font-mono text-slate-300">{applicationId}</span>
@@ -311,15 +381,15 @@ export default function BrowserExecutionDashboard() {
         <div className="bg-slate-900/60 border border-indigo-500/30 rounded-xl p-4 flex items-start gap-4">
           <div className="text-indigo-400 text-lg">🛡️</div>
           <div>
-            <h4 className="text-sm font-semibold text-indigo-200">Human-In-The-Loop Security Guard Active</h4>
+            <h4 className="text-sm font-semibold text-indigo-200">Phase 9 Real-Portal Hardening & Safety Boundary Active</h4>
             <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Phase 7 fills verified fields and uploads your selected resume into a live session. 
-              <strong> Final submission is strictly disabled</strong> and reserved for Phase 8 human approval.
+              Automated form inspection and safe field filling are active. 
+              <strong> NO APPROVAL = NO SUBMISSION invariant is strictly enforced.</strong> Final submission requires human approval in Phase 8 review.
             </p>
           </div>
         </div>
 
-        {/* User Action Required Prompt */}
+        {/* User Action Required Prompt (Login / CAPTCHA / Unresolved fields) */}
         {execution.user_action_required && (
           <div className="bg-amber-950/40 border border-amber-500/40 rounded-xl p-5 space-y-3">
             <div className="flex items-center gap-3">
@@ -342,24 +412,38 @@ export default function BrowserExecutionDashboard() {
         )}
 
         {/* Execution Metadata Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-5">
-            <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Active Portal URL</span>
-            <p className="text-sm font-mono text-slate-200 mt-2 truncate" title={execution.current_url || ""}>
-              {execution.current_url || "Not started"}
+            <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Portal & Domain</span>
+            <p className="text-sm font-medium text-white mt-1">{portalName}</p>
+            <p className="text-xs font-mono text-slate-400 mt-0.5 truncate" title={execution.portal_diagnostics?.url_domain || ""}>
+              {execution.portal_diagnostics?.url_domain || "Detecting..."}
             </p>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-5">
-            <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Browser Session ID</span>
-            <p className="text-sm font-mono text-slate-200 mt-2">
-              {execution.session_id || "No active session"}
+            <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Form Progression</span>
+            <p className="text-sm font-medium text-white mt-1">{stepText}</p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {execution.step_info?.has_next ? "Next step available" : "Final step"}
             </p>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-5">
-            <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Field Automation Progress</span>
-            <div className="flex items-center justify-between mt-2">
+            <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Security / Auth</span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                Auth: {execution.auth_status}
+              </span>
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                Challenge: {execution.challenge_type}
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-5">
+            <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Field Automation</span>
+            <div className="flex items-center justify-between mt-1">
               <span className="text-lg font-bold text-indigo-400">
                 {execution.executed_actions_count} / {execution.total_actions_count} Fields
               </span>
@@ -373,7 +457,7 @@ export default function BrowserExecutionDashboard() {
         {/* Discovered Form Fields Table */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden">
           <div className="p-5 border-b border-slate-800 flex justify-between items-center">
-            <h3 className="text-base font-semibold text-white">Inspected Form Fields</h3>
+            <h3 className="text-base font-semibold text-white">Inspected Form Fields ({portalName})</h3>
             <span className="text-xs text-slate-400">{execution.discovered_fields.length} detected fields</span>
           </div>
 
