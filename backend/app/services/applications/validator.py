@@ -21,7 +21,7 @@ class ApplicationDraftValidator:
     def validate_draft(
         cls,
         draft: ApplicationDraft,
-        context: CandidateApplicationContext,
+        context: CandidateApplicationContext | None = None,
     ) -> ApplicationDraftValidationResponse:
         missing_fields: List[str] = []
         validation_errors: List[str] = []
@@ -61,11 +61,13 @@ class ApplicationDraftValidator:
 
         # 4. Truthfulness / Anti-Fabrication Check
         # Ensure answers don't claim certifications or employers not in candidate context
-        cand_companies = {
-            exp.get("company", "").lower()
-            for exp in context.experience
-            if exp.get("company")
-        }
+        cand_companies = set()
+        if context and hasattr(context, "experience") and context.experience:
+            cand_companies = {
+                exp.get("company", "").lower()
+                for exp in context.experience
+                if isinstance(exp, dict) and exp.get("company")
+            }
         for q in draft.custom_questions:
             ans = q.answer or ""
             # If answer specifically states "worked at X", check against context

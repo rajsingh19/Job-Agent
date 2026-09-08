@@ -7,7 +7,7 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
 
 ---
 
-## Current Status: Phase 6 Complete
+## Current Status: Phase 8 Complete
 
 ### Phase 1 Deliverables:
 - Repository structure, configuration engine, async SQLAlchemy ORM models, state machine, Alembic migrations, and testing suite.
@@ -72,6 +72,23 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
   - `GET /api/v1/browser/applications/{application_id}/screenshots`
 - **Frontend Browser Console**: Next.js App Router dashboard (`/applications/[id]/execution`) displaying real-time execution progress, detected form fields, user action prompts, and visual checkpoints.
 
+### Phase 8 Deliverables:
+- **Approval Validation & Review Versioning (`ApprovalValidator`)**: Deterministic SHA-256 version hash generation across form fields, answers, resume ID, and cover letter. Changes to draft content immediately invalidate existing approval.
+- **Application Approval Service (`ApprovalService`)**: Enforces explicit human confirmation checkbox, pre-submission structural validation, generates cryptographic single-use approval tokens, records `ApplicationApproval` entries, and emits audit events.
+- **Hard-Coded Backend Submission Guard (`SubmissionGuard`)**: Strict gate requiring active unexpired approval, exact review version match, concurrency locking (`asyncio.Lock`), and idempotency check blocking `AlreadySubmittedError`.
+- **Browser Submitter Execution (`BrowserSubmitter`)**: Validates `SubmissionAuthorization` token before any final click action, locates portal submit buttons, captures pre-click and post-click visual checkpoints, and handles security challenge blocks.
+- **Post-Submission Confirmation Detector (`SubmissionConfirmationDetector`)**: Classifies submission outcomes (`CONFIRMED`, `NOT_CONFIRMED`, `UNKNOWN`) based on URL path rules, DOM text patterns, error banner detection, and extracts confirmation reference codes.
+- **Submission Orchestration Service (`SubmissionService`)**: Coordinates the transition `APPROVED` -> `SUBMITTING` -> `SUBMITTED` / `REQUIRES_USER_ACTION` / `FAILED`, persists confirmation data, and records status history.
+- **Immutable Append-Only Audit Trail (`AuditService`)**: Logs all lifecycle events (`VALIDATION_PASSED`, `APPROVED`, `APPROVAL_REVOKED`, `SUBMISSION_INITIATED`, `SUBMISSION_CONFIRMED`, `SUBMISSION_FAILED`) with automatic redaction of sensitive credentials.
+- **REST Human Approval & Submission API**:
+  - `POST /api/v1/applications/{application_id}/approve`
+  - `POST /api/v1/applications/{application_id}/revoke-approval`
+  - `GET /api/v1/applications/{application_id}/approval`
+  - `POST /api/v1/applications/{application_id}/submit`
+  - `GET /api/v1/applications/{application_id}/submission`
+  - `GET /api/v1/applications/{application_id}/audit`
+- **Frontend Review & Approval Dashboard**: Next.js App Router review cockpit (`/applications/[id]/review`) displaying complete application package, field review, Q&A confidence, cover letter, checkpoint screenshots, approval checkbox, auto-pilot submission trigger, and audit trail drawer.
+
 ---
 
 ## Quickstart
@@ -106,7 +123,8 @@ Visit http://localhost:8000/docs for Swagger documentation.
 cd frontend
 npm run dev
 ```
-Visit http://localhost:3000/applications/app_demo_001/execution for the browser automation console.
+- Browser execution console: http://localhost:3000/applications/app_demo_001/execution
+- Human approval & review dashboard: http://localhost:3000/applications/app_demo_001/review
 
 ---
 
@@ -119,7 +137,7 @@ Visit http://localhost:3000/applications/app_demo_001/execution for the browser 
 - [x] **Phase 5: ATS Detection + Connector Architecture**
 - [x] **Phase 6: Application Drafting & Grounded Answer Generation**
 - [x] **Phase 7: Browser Agent (Playwright)**
-- [ ] **Phase 8: Authentication & Persistent Session Manager**
+- [x] **Phase 8: Human Approval & Final Application Submission**
 - [ ] **Phase 9: Application Approval Queue**
 - [ ] **Phase 10: Tracking & Metrics**
 - [ ] **Phase 11: Next.js Frontend Dashboard**

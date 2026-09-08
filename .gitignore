@@ -56,6 +56,14 @@ storage/browser_sessions/*
 !storage/browser_sessions/.gitkeep
 storage/screenshots/*
 !storage/screenshots/.gitkeep
+backend/storage/resumes/*
+!backend/storage/resumes/.gitkeep
+backend/storage/sessions/*
+!backend/storage/sessions/.gitkeep
+backend/storage/browser_sessions/*
+!backend/storage/browser_sessions/.gitkeep
+backend/storage/screenshots/*
+!backend/storage/screenshots/.gitkeep
 
 # IDEs
 .idea/

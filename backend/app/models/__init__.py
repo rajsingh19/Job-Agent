@@ -13,6 +13,8 @@ from app.models.profile import UserPreference
 from app.models.job import JobPosting
 from app.models.application import Application
 from app.models.status_history import ApplicationStatusHistory
+from app.models.approval import ApplicationApproval
+from app.models.audit import ApplicationAuditEvent
 
 __all__ = [
     "Base",
@@ -31,4 +33,6 @@ __all__ = [
     "JobPosting",
     "Application",
     "ApplicationStatusHistory",
+    "ApplicationApproval",
+    "ApplicationAuditEvent",
 ]

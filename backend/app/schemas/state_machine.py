@@ -110,6 +110,7 @@ class ApplicationStateMachine:
         from_status: ApplicationStatus | str,
         to_status: ApplicationStatus | str,
         user_approved: bool = False,
+        reason: str | None = None,
     ) -> None:
         from_enum = ApplicationStatus(from_status)
         to_enum = ApplicationStatus(to_status)
