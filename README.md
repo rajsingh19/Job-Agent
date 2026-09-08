@@ -7,19 +7,21 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
 
 ---
 
-## Current Status: Phase 2 Complete
+## Current Status: Phase 3 Complete
 
 ### Phase 1 Deliverables:
 - Repository structure, configuration engine, async SQLAlchemy ORM models, state machine, Alembic migrations, and testing suite.
 
 ### Phase 2 Deliverables:
-- **Resume Ingestion & Upload API**: Multipart upload for PDF & DOCX with MIME/extension validation, size enforcement (10MB), path traversal protection, and SHA-256 content hashing.
-- **Text Extraction Layer**: Abstraction with `PDFResumeExtractor` and `DOCXResumeExtractor`. Detects scanned/image-only documents (`TEXT_EXTRACTION_REQUIRED`) and password/corrupted files (`FILE_CORRUPTED`).
-- **AI / LLM Provider Abstraction**: Vendor-agnostic provider layer (`OpenAILLMProvider`, `GroqLLMProvider`, `OllamaLLMProvider`, `MockLLMProvider`).
-- **Structured LLM Parser & Grounding**: `LLMResumeParser` strictly extracting verified candidate data without hallucinating experience or skills.
-- **Deterministic Fallback Parser**: `FallbackResumeParser` activated on LLM unavailability, setting `low_confidence = True` and logging audit warnings.
-- **Authoritative Preferences & Candidate Profile**: Independent persistence of `UserPreferences` and `ResumeProfile` joined seamlessly via `CandidateProfileService` (`GET /api/v1/profile`).
-- **Structured Error Handling**: Standardized error payloads for `UNSUPPORTED_FILE_TYPE`, `FILE_TOO_LARGE`, `FILE_CORRUPTED`, `TEXT_EXTRACTION_FAILED`, `TEXT_EXTRACTION_REQUIRED`, `LLM_UNAVAILABLE`, `LLM_PARSE_FAILED`, `RESUME_NOT_FOUND`, `FORBIDDEN_RESOURCE_ACCESS`.
+- Resume upload API (PDF/DOCX), text extraction layer, LLM & fallback parsers, candidate profile synthesizers, and multi-tenant security.
+
+### Phase 3 Deliverables:
+- **Multi-Source Discovery Engine**: Unified discovery architecture supporting `APISource` (Greenhouse, Lever), `ATSSource` (Ashby), and `BrowserSource` (`GenericBrowserDiscovery`).
+- **Failure Isolation & Resiliency**: Exponential backoff retries and bounded concurrency (`asyncio.Semaphore`); failing sources never crash the discovery run.
+- **Normalization Layer**: Standardized company names, expanded abbreviations in job titles, normalized remote types (`REMOTE`, `HYBRID`, `ON_SITE`), and canonical skill extraction.
+- **Deduplication Engine**: Deterministic `source_hash` generation and fuzzy cross-source deduplication.
+- **Idempotent Persistence**: `JobRepository` ensuring repeated discovery runs update existing postings without duplicate database records.
+- **REST Discovery API**: `POST /api/v1/jobs/discover`, `GET /api/v1/jobs`, and `GET /api/v1/jobs/{job_id}`.
 
 ---
 
@@ -55,7 +57,7 @@ Visit http://localhost:8000/docs for Swagger documentation.
 
 - [x] **Phase 1: Repository + Database + Models + Configuration**
 - [x] **Phase 2: Resume / Candidate Profile System**
-- [ ] **Phase 3: Job Discovery (Greenhouse, Lever, Ashby, Generic Browser)**
+- [x] **Phase 3: Job Discovery (Greenhouse, Lever, Ashby, Generic Browser)**
 - [ ] **Phase 4: Matching Engine (Hard filters + Hybrid Semantic Ranking)**
 - [ ] **Phase 5: ATS Detection + Connector Architecture**
 - [ ] **Phase 6: Application Drafting & Grounded Answer Generation**

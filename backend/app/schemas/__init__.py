@@ -21,6 +21,9 @@ from app.schemas.job import (
     JobPostingCreate,
     JobPostingResponse,
     JobFilter,
+    JobSearchQuery,
+    SourceError,
+    DiscoveryResult,
 )
 from app.schemas.status_history import (
     StatusHistoryBase,
@@ -64,6 +67,9 @@ __all__ = [
     "JobPostingCreate",
     "JobPostingResponse",
     "JobFilter",
+    "JobSearchQuery",
+    "SourceError",
+    "DiscoveryResult",
     "StatusHistoryBase",
     "StatusHistoryCreate",
     "StatusHistoryResponse",

@@ -57,6 +57,15 @@ class Settings(BaseSettings):
     discovery_interval_minutes: int = 360
     enable_auto_drafting: bool = True
 
+    # Job Discovery Configuration
+    job_discovery_timeout_seconds: float = 30.0
+    job_discovery_max_retries: int = 3
+    job_discovery_max_concurrency: int = 5
+    job_discovery_default_limit: int = 50
+    greenhouse_company_slugs: list[str] = ["gitlab", "canonical", "cloudflare", "stripe"]
+    lever_company_slugs: list[str] = ["palantir", "netflix", "affirm"]
+    ashby_company_slugs: list[str] = ["ramp", "openai", "cursor"]
+
     # Human-In-The-Loop Enforcement
     require_explicit_approval: bool = True
 
