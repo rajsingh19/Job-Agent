@@ -7,22 +7,19 @@ The agent automates discovery, semantic ranking, and field preparation, but **fi
 
 ---
 
-## Current Status: Phase 1 Complete
+## Current Status: Phase 2 Complete
 
 ### Phase 1 Deliverables:
-- **Repository Structure**: Modular layout separating backend, frontend, storage, migrations, and documentation.
-- **Configuration Engine**: Typed Pydantic `Settings` loading from `.env` with validation, directory provisioning, and vendor-agnostic AI provider options.
-- **Data Models**:
-  - `User`: Base identity entity.
-  - `Resume`: Uploaded resumes with content hashing and structured `ResumeProfile` JSON.
-  - `UserPreference`: Explicit user filters (target roles, locations, remote preference, minimum stipend, excluded companies).
-  - `JobPosting`: Normalized job posting model with ATS provider detection and source hashing for deduplication.
-  - `Application`: Application entity tracking matches, drafted fields, generated answers, warnings, and review packages.
-  - `ApplicationStatusHistory`: Append-only audit trail recording every state transition with actor and reason.
-- **State Machine**: Enforced application lifecycle (`DISCOVERED` -> `MATCHED` -> `DRAFTING` -> `PENDING_REVIEW` -> `APPROVED` -> `SUBMITTING` -> `SUBMITTED`, etc.) with strict programmatic blocks against unapproved submissions.
-- **FastAPI Skeleton**: Asynchronous FastAPI app with dependency injection, CORS middleware, lifespan events, and `/api/v1/system/health` check.
-- **Alembic Migrations**: Async database migration setup for SQLite and PostgreSQL.
-- **Testing Suite**: 100% passing pytest suite covering configuration, models, schemas, database cascade integrity, state machine transitions, and API endpoints.
+- Repository structure, configuration engine, async SQLAlchemy ORM models, state machine, Alembic migrations, and testing suite.
+
+### Phase 2 Deliverables:
+- **Resume Ingestion & Upload API**: Multipart upload for PDF & DOCX with MIME/extension validation, size enforcement (10MB), path traversal protection, and SHA-256 content hashing.
+- **Text Extraction Layer**: Abstraction with `PDFResumeExtractor` and `DOCXResumeExtractor`. Detects scanned/image-only documents (`TEXT_EXTRACTION_REQUIRED`) and password/corrupted files (`FILE_CORRUPTED`).
+- **AI / LLM Provider Abstraction**: Vendor-agnostic provider layer (`OpenAILLMProvider`, `GroqLLMProvider`, `OllamaLLMProvider`, `MockLLMProvider`).
+- **Structured LLM Parser & Grounding**: `LLMResumeParser` strictly extracting verified candidate data without hallucinating experience or skills.
+- **Deterministic Fallback Parser**: `FallbackResumeParser` activated on LLM unavailability, setting `low_confidence = True` and logging audit warnings.
+- **Authoritative Preferences & Candidate Profile**: Independent persistence of `UserPreferences` and `ResumeProfile` joined seamlessly via `CandidateProfileService` (`GET /api/v1/profile`).
+- **Structured Error Handling**: Standardized error payloads for `UNSUPPORTED_FILE_TYPE`, `FILE_TOO_LARGE`, `FILE_CORRUPTED`, `TEXT_EXTRACTION_FAILED`, `TEXT_EXTRACTION_REQUIRED`, `LLM_UNAVAILABLE`, `LLM_PARSE_FAILED`, `RESUME_NOT_FOUND`, `FORBIDDEN_RESOURCE_ACCESS`.
 
 ---
 
@@ -57,7 +54,7 @@ Visit http://localhost:8000/docs for Swagger documentation.
 ## Roadmap
 
 - [x] **Phase 1: Repository + Database + Models + Configuration**
-- [ ] **Phase 2: Resume / Candidate Profile System**
+- [x] **Phase 2: Resume / Candidate Profile System**
 - [ ] **Phase 3: Job Discovery (Greenhouse, Lever, Ashby, Generic Browser)**
 - [ ] **Phase 4: Matching Engine (Hard filters + Hybrid Semantic Ranking)**
 - [ ] **Phase 5: ATS Detection + Connector Architecture**

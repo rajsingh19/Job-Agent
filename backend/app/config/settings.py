@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     resumes_dir: Path = Field(default=BASE_DIR / "storage" / "resumes")
     sessions_dir: Path = Field(default=BASE_DIR / "storage" / "sessions")
     screenshots_dir: Path = Field(default=BASE_DIR / "storage" / "screenshots")
+    max_resume_file_size_bytes: int = 10 * 1024 * 1024  # 10 MB limit
 
     # AI / LLM Provider Configuration (Vendor Agnostic)
     llm_provider: str = "mock"

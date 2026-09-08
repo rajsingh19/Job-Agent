@@ -8,6 +8,7 @@ from app.schemas.resume import (
     ResumeBase,
     ResumeCreate,
     ResumeResponse,
+    CandidateProfile,
 )
 from app.schemas.preferences import (
     UserPreferencesBase,
@@ -54,6 +55,7 @@ __all__ = [
     "ResumeBase",
     "ResumeCreate",
     "ResumeResponse",
+    "CandidateProfile",
     "UserPreferencesBase",
     "UserPreferencesCreate",
     "UserPreferencesUpdate",

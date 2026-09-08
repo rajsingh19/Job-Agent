@@ -59,6 +59,10 @@ class ResumeProfile(BaseModel):
     skills: List[str] = Field(default_factory=list)
     links: Dict[str, str] = Field(default_factory=dict)
     certifications: List[CertificationItem] = Field(default_factory=list)
+    achievements: List[str] = Field(default_factory=list)
+    languages: List[str] = Field(default_factory=list)
+    warnings: List[str] = Field(default_factory=list)
+    low_confidence: bool = False
     raw_text: Optional[str] = None
 
 
@@ -84,3 +88,15 @@ class ResumeResponse(ResumeBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CandidateProfile(BaseModel):
+    """
+    Combined candidate profile joining ResumeProfile and UserPreferences
+    without mutating either source.
+    """
+    user_id: str
+    resume_id: Optional[str] = None
+    resume_profile: ResumeProfile
+    preferences: Dict[str, Any]
+    generated_at: datetime = Field(default_factory=lambda: datetime.now())
